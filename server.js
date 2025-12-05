@@ -8,7 +8,7 @@ const app = express()
 
 app.use(express.json())
 
-app.get("/", (req, res) => res.send("App is running"))
+app.get("/", (req, res) => res.send("App is running successfully"))
 
 app.use("/api/auth", router)
 

@@ -76,10 +76,21 @@ const updateUserDetailsById = async (id, columns, values) => {
     }
 }
 
+const deleteUserById = async (id) => {
+    try {
+        const [result] = await pool.query("DELETE FROM users WHERE id = ?", [id]);
+        return result.affectedRows;
+    } catch (err) {
+        console.error("DB error:", err.message);
+        throw err;
+    }
+}
+
 module.exports = {
     createUser,
     getAllUsers,
     getuserByEmailId,
     getuserById,
-    updateUserDetailsById
+    updateUserDetailsById,
+    deleteUserById
 }

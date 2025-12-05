@@ -1,7 +1,7 @@
 
 const bcrypt = require("bcrypt")
 
-const { getuserByEmailId, createUser, getuserById, updateUserDetailsById } = require("../models/user.model")
+const { getuserByEmailId, createUser, getuserById, updateUserDetailsById, deleteUserById, getAllUsers } = require("../models/user.model")
 const { generateToken } = require("../utils/jwt")
 const { pool } = require("../db")
 
@@ -66,11 +66,11 @@ const login = async (req, res) => {
 
 
 const signup = async (req, res) => {
-    const { firstname, lastname, email, password, confirmPassword, phoneNumber } = req.body
+    const { firstName, lastName, email, password, confirmPassword, phoneNumber } = req.body
 
     try {
 
-        if (!firstname || !lastname || !email || !password || !confirmPassword || !phoneNumber) {
+        if (!firstName || !lastName || !email || !password || !confirmPassword || !phoneNumber) {
             return res.status(400).json({
                 success: false,
                 message: "All fields are required"
@@ -95,7 +95,7 @@ const signup = async (req, res) => {
 
         const hashPassword = await bcrypt.hash(password, 10)
 
-        const usesrId = await createUser(firstname, lastname, email, hashPassword, phoneNumber)
+        const usesrId = await createUser(firstName, lastName, email, hashPassword, phoneNumber)
 
         return res.status(200).json({
             success: true,
@@ -198,4 +198,83 @@ const updateUserDeatils = async (req, res) => {
         })
     }
 }
-module.exports = { login, signup, updateUserDeatils }
+
+const deleteUser = async (req, res) => {
+    try {
+        if (!req.params.id) {
+            return res.status(400).json({
+                success: false,
+                message: "No user id provided"
+            })
+        }
+
+        const { id } = req.params
+        const checkUser = await getuserById(id)
+
+        if (!checkUser) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            })
+        }
+
+        const result = await deleteUserById(id)
+
+        if (result === 0) {
+            return res.status(500).json({
+                success: false,
+                message: "Failed to delete user"
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "User deleted successfully"
+        })
+
+    } catch (err) {
+        console.error("delete user error", err.message)
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        })
+    }
+}
+
+const getUsers = async (req, res) => {
+    const users = await getAllUsers()
+
+    return res.status(200).json({
+        success: true,
+        users
+    })
+}
+
+const getSpecificUser = async (req, res) => {
+
+    try {
+        const { id } = req.params
+        const user = await getuserById(id)
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            user
+        })
+    } catch (err) {
+        console.error("error in getting user deatils: ", err.message);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        })
+
+    }
+}
+
+module.exports = { login, signup, updateUserDeatils, deleteUser, getUsers, getSpecificUser }
